@@ -1,6 +1,9 @@
 #include <iostream>
 #include <algorithm>
+#include <chrono>
 #include <vector>
+
+using namespace std::chrono;
 
 void permute(std::vector<int> combinations,int r){
     do{
@@ -22,6 +25,8 @@ int main() {
 
     int t;
 
+    auto start = high_resolution_clock::now();
+
     do {
         t=0;
         for (int i = 0; i < n; ++i) {
@@ -32,5 +37,11 @@ int main() {
         }
         permute(combinations, r);
     } while (std::next_permutation(v.begin(), v.end()));
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<seconds>(stop - start);
+
+    std::cout << "Time taken for brute force : " << duration.count() << " seconds" << "\n";
+
     return 0;
 }

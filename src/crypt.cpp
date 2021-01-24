@@ -1,15 +1,52 @@
 #include <iostream>
 #include <fstream>
-#include <map>
+#include <map> 
+#include <chrono>
 #include <vector>
-#include <string>
+#include <array>
 #include <math.h>
 #include <iomanip>
 #include <algorithm>
 
 using namespace std;
+using namespace std::chrono;
 
 typedef std::map<char, int> BooleanMap;
+
+void reverse(int arr[],int start,int end){
+    int temp;
+    if(start<end){
+        while(start<end){
+            temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+            start++;
+            end--;
+        }
+    }
+}
+
+int next_permute(int arr[],int size){
+    int inv_point = size - 2;
+    int temp;
+
+    while(inv_point>=0 && arr[inv_point]>=arr[inv_point+1]){
+        inv_point--;
+    }
+    if(inv_point<0){
+        return 0;
+    }
+    for(int i=size-1;i>inv_point;--i){
+        if(arr[i]>arr[inv_point]){
+            temp = arr[i];
+            arr[i] = arr[inv_point];
+            arr[inv_point] = temp;
+            break;
+        }
+    }
+    reverse(arr,inv_point+1,size-1);
+    return 1;
+}
 
 int subtituteOperandsToInt(string str,BooleanMap variables){
     int sum = 0;
@@ -34,19 +71,20 @@ bool isValid(vector<string> operands,BooleanMap variables){
     return sum == subtituteOperandsToInt(operands[operands.size()-1], variables);
 }
 
-bool permute(std::vector<int> combinations,vector<string> operands,BooleanMap &variables){
+bool permute(int combinations[],vector<string> operands,BooleanMap &variables, int &counter, int size){
     int i;
     do{
         i = 0;
+        counter++;
         for (auto const& p : variables)
         {
-            variables[p.first] = combinations.at(i);
+            variables[p.first] = combinations[i];
             i++;
         }
         if(isValid(operands,variables)){
             return true;
         }
-    } while(std::next_permutation(combinations.begin(), combinations.end()));
+    } while(next_permute(combinations,size));
 
     return false;
 }
@@ -78,40 +116,54 @@ int main(){
             variables.erase('+');
         }
 
-        vector<bool> v(10);
-        vector<int> combinations(variables.size());
-        fill(v.end() - variables.size(), v.end(), true);
+        bool found=false;
+        int counter=0;
+
+        int v[10] ={0}; //bitmask
+        int combinations[variables.size()];
+        for(int i=10;i>10-variables.size();--i){
+            v[i] = 1;
+        }
 
         int t;
 
         operands[operands.size()-3].pop_back(); //Removes the + sign
 
-        for ( const auto &pair : variables ) {
-            cout << pair.first << " : " << pair.second << "\n";
-        }
+        auto start = high_resolution_clock::now();
 
         do {
             t=0;
             for (int i = 0; i < 10; ++i) {
                 if (v[i]) {
-                    combinations.at(t)=i;
+                    combinations[t]=i;
                     t++;
                 }
             }
-            if(permute(combinations,operands,variables)){
+            if(permute(combinations,operands,variables,counter,variables.size())){
+                found = true;
                 break;
             }
-        } while (std::next_permutation(v.begin(), v.end()));
+        } while(next_permute(v,10));
+
+        if(found){
+            for ( const auto &pair : variables ) {
+                cout << pair.first << " : " << pair.second << "\n";
+            }
+
+            for(int i=0;i<operands.size();i++){
+                cout << operands[i] << " : " << subtituteOperandsToInt(operands[i],variables) << "\n";
+            }
+        } else{
+            cout << "No solutions found" << "\n";
+        }
+
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(stop - start);
+
+        cout << "Time taken for brute force : " << duration.count() << " milliseconds" << "\n";
+        cout << "Jumlah tes : " << counter << "\n";
 
         cout << "---------------" << endl;
-
-        for ( const auto &pair : variables ) {
-            cout << pair.first << " : " << pair.second << "\n";
-        }
-
-        for(int i=0;i<operands.size();i++){
-            cout << operands[i] << " : " << subtituteOperandsToInt(operands[i],variables) << "\n";
-        }
 
     } // END OF ELSE STATEMENT
 
