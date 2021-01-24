@@ -11,8 +11,6 @@
 using namespace std;
 using namespace std::chrono;
 
-typedef std::map<char, int> BooleanMap;
-
 void reverse(int arr[],int start,int end){
     int temp;
     if(start<end){
@@ -48,19 +46,19 @@ int next_permute(int arr[],int size){
     return 1;
 }
 
-int subtituteOperandsToInt(string str,BooleanMap variables){
+int subtituteOperandsToInt(string str,int variables[]){
     int sum = 0;
     for(int i=0;i < str.size();i++){
-        sum += variables[str[i]]*pow(10,str.size()-i-1);
+        sum += variables[str[i]-65]*pow(10,str.size()-i-1);
     }
     return sum;
 }
 
-bool isValid(vector<string> operands,BooleanMap variables){
+bool isValid(vector<string> operands,int variables[]){
     int sum=0;
 
     for(int i=0;i<operands.size();i++){
-        if(operands[i][0] != '-' && variables[operands[i][0]]==0){ // If first letter of a word is zero we assume it's false
+        if(operands[i][0] != '-' && variables[operands[i][0]-65]==0){ // If first letter of a word is zero we assume it's false
             return false;
         }
         if(i<operands.size()-2){
@@ -71,15 +69,17 @@ bool isValid(vector<string> operands,BooleanMap variables){
     return sum == subtituteOperandsToInt(operands[operands.size()-1], variables);
 }
 
-bool permute(int combinations[],vector<string> operands,BooleanMap &variables, int &counter, int size){
-    int i;
+bool permute(int combinations[],vector<string> operands,int variables[], int &counter, int size){
+    int j;
     do{
-        i = 0;
+        j = 0;
         counter++;
-        for (auto const& p : variables)
+        for (int i=0;i<26;i++)
         {
-            variables[p.first] = combinations[i];
-            i++;
+            if(variables[i]!=-1){
+                variables[i] = combinations[j];
+                j++;
+            }
         }
         if(isValid(operands,variables)){
             return true;
@@ -94,9 +94,11 @@ int main(){
     fstream arith_file;
     string file_name;
 
-    BooleanMap variables;
+    int variables[26];
+    std::fill(variables,variables+(end(variables) - begin(variables)),-1);
+    int variables_count=0;
     vector<string> operands;
-
+    printf("Input file name : ");
     cin >> file_name;
     arith_file.open(file_name, ios::in);
     if(!arith_file){
@@ -107,21 +109,19 @@ int main(){
         while(getline(arith_file,line)){
             operands.push_back(line);
             for(char &c : line){
-                if(!variables.count(c)){
-                    variables[c] = 0;
+                if(c!='-' && c!='+' && variables[(int)c-65]==-1){
+                    variables[(int)c-65] = 0;
+                    variables_count++;
                 }
             }
-            //Erases useless symbols
-            variables.erase('-');
-            variables.erase('+');
         }
 
         bool found=false;
         int counter=0;
 
         int v[10] ={0}; //bitmask
-        int combinations[variables.size()];
-        for(int i=10;i>10-variables.size();--i){
+        int combinations[variables_count];
+        for(int i=10;i>=10-variables_count;i--){
             v[i] = 1;
         }
 
@@ -139,20 +139,26 @@ int main(){
                     t++;
                 }
             }
-            if(permute(combinations,operands,variables,counter,variables.size())){
+            if(permute(combinations,operands,variables,counter,variables_count)){
                 found = true;
                 break;
             }
         } while(next_permute(v,10));
 
         if(found){
-            for ( const auto &pair : variables ) {
-                cout << pair.first << " : " << pair.second << "\n";
+            for(int i=0;i<operands.size()-2;i++){
+                cout << operands[i] << "\n";
             }
+            cout << "---------+" << "\n";
+            cout << operands[operands.size()-1] << "\n";
 
-            for(int i=0;i<operands.size();i++){
-                cout << operands[i] << " : " << subtituteOperandsToInt(operands[i],variables) << "\n";
+            cout << "\n";
+
+            for(int i=0;i<operands.size()-2;i++){
+                cout << subtituteOperandsToInt(operands[i],variables) << "\n";
             }
+            cout << "---------+" << "\n";
+            cout << subtituteOperandsToInt(operands[operands.size()-1],variables) << "\n";
         } else{
             cout << "No solutions found" << "\n";
         }
