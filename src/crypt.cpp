@@ -1,15 +1,20 @@
 #include <iostream>
 #include <fstream>
-#include <map> 
 #include <chrono>
 #include <vector>
 #include <array>
-#include <math.h>
 #include <iomanip>
-#include <algorithm>
 
 using namespace std;
 using namespace std::chrono;
+
+int power(int a,int b){
+    int total = 1;
+    for(int i=0;i<b;i++){
+        total*=a;
+    }
+    return total;
+}
 
 void reverse(int arr[],int start,int end){
     int temp;
@@ -49,7 +54,7 @@ int next_permute(int arr[],int size){
 int subtituteOperandsToInt(string str,int variables[]){
     int sum = 0;
     for(int i=0;i < str.size();i++){
-        sum += variables[str[i]-65]*pow(10,str.size()-i-1);
+        sum += variables[str[i]-65]*power(10,str.size()-i-1);
     }
     return sum;
 }
